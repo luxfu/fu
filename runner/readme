@@ -1,0 +1,14 @@
+po：pageObject，抽象页面属性：url、元素定位、常用动作（元素操作集）、前置后置脚本
+case：单个用例，login、query等
+  元素定位：css、xpath、po
+  动作：click、input、top等
+  校验：assert
+  前置（后置）脚本：sql脚本（数据准备和清理）
+case_set：case用例集
+
+表设计：
+project：id，name，status，create_time
+po：id，name，element，by（css、xpath。。），action，assert_by，assert_content
+po_case:
+po_script:
+case_set:id,name,cases,status,report_path,log_path

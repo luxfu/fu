@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"terminal.integrated.persistentSessionReviveProcess": "never",
+		"python.defaultInterpreterPath": "D:\\miniconda3\\envs\\py313\\python.exe",
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.autopep8",
+			"editor.formatOnSave": true,
+		},
+		"python.formatting.autopep8Args": [
+			"--aggressive", // 启用更严格的格式化
+			"--max-line-length=120",
+			"--indent-size=4",
+			"--experimental" // 启用实验性功能（控制换行）
+		],
+	}
+}
