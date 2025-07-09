@@ -15,7 +15,8 @@ class PorjectOut(Schema):
 
     @field_validator("create_time", mode="before")
     def format_create_time(cls, v: datetime):
-        return v.strftime("%Y-%m-%d %H:%M:%S") if isinstance(v, datetime) else v
+        return v.strftime("%Y-%m-%d %H:%M:%S") if isinstance(v,
+                                                             datetime) else v
 
     class Config:
         json_encoders = {
