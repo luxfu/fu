@@ -9,6 +9,6 @@ case_set：case用例集
 表设计：
 project：id，name，status，create_time
 po：id，name，element，by（css、xpath。。），action，assert_by，assert_content
-po_case:
+po_case:caseid，itemid，order，name，element，by（css、xpath。。），action，assert_by，assert_content
 po_script:
 case_set:id,name,cases,status,report_path,log_path

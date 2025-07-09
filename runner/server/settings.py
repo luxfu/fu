@@ -11,10 +11,28 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 报告配置
+REPORTS_ROOT = os.path.join(BASE_DIR, 'reports')
+MEDIA_URL = '/reports/'
+MEDIA_ROOT = REPORTS_ROOT
+
+# 报告生成选项
+COMPRESS_REPORTS = False  # 是否压缩报告
+CONTINUE_ON_FAILURE = True  # 用例失败后是否继续执行
+
+# Allure配置
+ALLURE = {
+    'REPORT_TITLE': '自动化测试报告',
+    'REPORT_DESCRIPTION': '由Django-Selenium测试平台生成',
+    'LOGO_PATH': os.path.join(BASE_DIR, 'static', 'logo.png'),
+    'ENABLE_TREND': True,  # 是否启用历史趋势
+    'MAX_HISTORY': 10  # 保留的历史报告数量
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
