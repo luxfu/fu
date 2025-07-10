@@ -3,6 +3,7 @@ from ninja.orm import create_schema
 from runner.models import PageObject
 from typing import Optional, Union
 from pydantic import model_validator, field_validator
+from runner.api.exceptions import BusinessException
 from datetime import datetime
 from runner.api.response import BaseResponse, standard_response
 router = Router(tags=["po对象"])
@@ -29,9 +30,11 @@ class PageObjectIn(Schema):
 
     @model_validator(mode="after")
     def validator_url_or_locator(self):
-        if self.url is None:
-            if not self.locator or not self.locator_type:
-                raise ValueError("url和locator必须选择一种")
+        if not self.url:
+            if not self.locator and not self.locator_type:
+                raise BusinessException(code=422, message="数据验证失败", data={
+                                        "details": "url和locator必须选择一种"})
+                # raise ValueError("url和locator必须选择一种")
         return self
 
 
