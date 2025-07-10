@@ -1,0 +1,115 @@
+from pydantic import BaseModel, Field, ValidationError
+from typing import Callable, TypeVar, Optional, Generic
+from functools import wraps
+
+T = TypeVar('T')
+
+
+class BaseResponse(BaseModel, Generic[T]):
+    code: int = Field(200, description="状态码")
+    message: str = Field("success", description="消息描述")
+    data: Optional[T] = Field(None, description="响应数据")
+
+    @classmethod
+    def success(cls, data: T = None, message: str = "操作成功"):
+        return cls(code=200, message=message, data=data)
+
+    @classmethod
+    def error(cls, code: int, message: str, data: dict = None):
+        return cls(code=code, message=message, data=data)
+
+
+class PaginatedResponse(BaseResponse, Generic[T]):
+    total: int = Field(..., description="总记录数")  # Field(...)特殊用法，表示必须且没有默认值
+    page: int = Field(1, description="当前页码")
+    page_size: int = Field(10, description="每页数量")
+
+    @classmethod
+    def paginated(
+        cls,
+        data: list,
+        total: int,
+        page: int = 1,
+        page_size: int = 10,
+        message: str = "查询成功"
+    ):
+        return cls(
+            code=200,
+            message=message,
+            data=data,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
+
+
+class ErrorDetail(BaseModel):
+    field: str = Field(..., description="错误字段")
+    message: str = Field(..., description="错误信息")
+    code: str = Field(..., description="错误代码")
+
+
+class ErrorResponse(BaseResponse):
+    errors: Optional[list[ErrorDetail]] = Field(None, description="错误详情列表")
+
+    @classmethod
+    def validation_error(cls, errors: list):
+        """创建验证错误响应"""
+        error_details = []
+        for error in errors:
+            # 处理两种来源的错误格式
+            if isinstance(error, dict):
+                # Django Ninja 格式错误
+                loc = error.get("loc", [])
+                msg = error.get("msg", "Invalid input")
+                error_type = error.get("type", "validation_error")
+            else:
+                # Pydantic 格式错误
+                loc = getattr(error, "loc", [])
+                msg = getattr(error, "msg", "Invalid input")
+                error_type = getattr(error, "type", "validation_error")
+
+            error_details.append(ErrorDetail(
+                field="->".join(map(str, loc)),
+                message=msg,
+                code=error_type
+            ))
+
+        return cls(
+            code=422,
+            message="数据验证失败",
+            data={"detail": error_details}
+        )
+
+
+def standard_response(view_func: Callable):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        try:
+            result = view_func(request, *args, **kwargs)
+
+            # 如果视图返回 BaseResponse 实例，直接返回
+            if isinstance(result, BaseResponse):
+                return result
+
+            # 处理普通响应
+            status = 200
+            if isinstance(result, tuple) and len(result) == 2:
+                data, status = result
+            else:
+                data = result
+
+            return BaseResponse.success(data=data)
+
+        except ValidationError as e:
+            return ErrorResponse.validation_error(e.errors())
+
+        except Exception as e:
+            # 其他异常处理
+            return ErrorResponse.error(
+                code=500,
+                message="服务器内部错误",
+                data={"detail": str(e)}
+            )
+
+    return wrapper
