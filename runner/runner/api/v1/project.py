@@ -1,6 +1,5 @@
 from ninja import Schema, Router
-from pydantic import field_validator, model_validator
-from pydantic import ValidationError
+from pydantic import field_validator
 from runner.models import Project
 from datetime import datetime
 

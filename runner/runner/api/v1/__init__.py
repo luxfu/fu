@@ -1,4 +1,5 @@
 from .project import router as project_router
+from .pageobject import router as po_router
 from ninja import Router
 from ninja.security import HttpBearer
 
@@ -12,4 +13,5 @@ class AuthBearer(HttpBearer):
 
 # router = Router(auth=AuthBearer())
 router = Router()
-router.add_router("/project/", project_router)
+router.add_router("/", project_router)
+router.add_router("/", po_router)

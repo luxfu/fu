@@ -13,15 +13,15 @@ class PageObject(models.Model):
         ('class', 'Class Name'),
         ('link', 'Link Text'),
     )
-
+    po_id = models.SmallIntegerField("po页面id", primary_key=True)
     name = models.CharField("元素名称", max_length=100)
     locator = models.CharField("定位表达式", max_length=255)
     locator_type = models.CharField(
         "定位方式", max_length=10, choices=LOCATOR_TYPES)
     created_at = models.DateTimeField("创建时间", auto_now_add=True)
     url = models.CharField("页面URL", max_length=255,
-                           help_text="页面基础URL，可以是绝对或相对路径")
-    is_relative = models.BooleanField("相对路径", default=True,
+                           null=True, help_text="页面基础URL，可以是绝对或相对路径")
+    is_relative = models.BooleanField("相对路径", default=False,
                                       help_text="如果是相对路径，执行时会与基础URL拼接")
 
     # 获取完整URL的方法
@@ -33,7 +33,6 @@ class PageObject(models.Model):
     class Meta:
         db_table = "pageobject"
         verbose_name = "页面对象"
-        unique_together = ('name', 'locator_type', 'locator')
 
 
 class TestCase(models.Model):
