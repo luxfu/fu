@@ -95,6 +95,9 @@ class TestCase(models.Model):
     def final_locator_type(self):
         return self.po.locator_type if self.po else self.custom_locator_type
 
+    class Meta:
+        db_table = "testcase"
+
 
 class TestSuite(models.Model):
     STATUS_CHOICES = (
@@ -122,6 +125,9 @@ class TestSuite(models.Model):
     created_at = models.DateTimeField("创建时间", auto_now_add=True)
     # 获取环境特定的基础URL
 
+    class Meta:
+        db_table = "testsuite"
+
     def get_environment_url(self):
         env_urls = {
             'dev': 'http://dev.example.com',
@@ -138,10 +144,11 @@ class SuiteCaseRelation(models.Model):
     order = models.PositiveIntegerField("执行顺序")
 
     class Meta:
+        db_table = "suitecase"
         ordering = ['order']
 
 
-class TestExecution(models.Model):
+class Tasks(models.Model):
     STATUS_CHOICES = (
         ('pending', '排队中'),
         ('running', '执行中'),
@@ -158,6 +165,9 @@ class TestExecution(models.Model):
     report_url = models.URLField("报告链接", blank=True)
     log_path = models.CharField("日志路径", max_length=255, blank=True)
     executor = models.CharField("执行人", max_length=50, blank=True)
+
+    class Meta:
+        db_table = "tasks"
 
 
 class FormatDateTimeField(models.DateTimeField):

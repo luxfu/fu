@@ -1,4 +1,4 @@
-from runner.models import TestExecution
+from runner.models import Tasks
 from celery import shared_task
 from core.executor import SeleniumExecutor
 from django.conf import settings
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def run_test_suite(execution_id):
-    execution = TestExecution.objects.get(id=execution_id)
+    execution = Tasks.objects.get(id=execution_id)
     execution.status = 'running'
     execution.save()
 
