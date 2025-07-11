@@ -5,7 +5,8 @@ from typing import Optional, Union
 from pydantic import model_validator, field_validator
 from runner.api.exceptions import BusinessException
 from datetime import datetime
-from runner.api.response import BaseResponse, standard_response
+from runner.api.response import BaseResponse, standard_response, PaginatedResponse
+from pydantic import BaseModel
 router = Router(tags=["po对象"])
 
 
@@ -39,7 +40,12 @@ class PageObjectIn(Schema):
 
 
 @router.post("/pageobject", response=BaseResponse[PageObjectOut])
-# @standard_response
 def create_po(request, payload: PageObjectIn):
     po = PageObject.objects.create(**payload.dict())
     return BaseResponse.success(data=po, message="创建成功")
+
+
+@router.get("/pageobject", response=PaginatedResponse[list[PageObjectOut]])
+def list_pageobjects(request, page: int, page_size: int):
+    po = PageObject.objects.all()
+    return PaginatedResponse.paginated(queryset=po, page_size=page_size, page=page)
