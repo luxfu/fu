@@ -28,16 +28,17 @@ class PaginatedResponse(BaseResponse, Generic[T]):
     @classmethod
     def paginated(
         cls,
-        data: list,
-        total: int,
+        queryset: list,
         page: int = 1,
         page_size: int = 10,
         message: str = "查询成功"
     ):
+        total = queryset.count()
+        items = queryset[(page-1)*page_size:page*page_size]
         return cls(
             code=200,
             message=message,
-            data=data,
+            data=items,
             total=total,
             page=page,
             page_size=page_size
@@ -103,15 +104,14 @@ class ErrorResponse(BaseResponse):
 
 
 def standard_response(view_func: Callable):
+    """非baseresponse类标准化"""
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         try:
             result = view_func(request, *args, **kwargs)
-
             # 如果视图返回 BaseResponse 实例，直接返回
             if isinstance(result, BaseResponse):
                 return result
-
             # 处理普通响应
             status = 200
             if isinstance(result, tuple) and len(result) == 2:
