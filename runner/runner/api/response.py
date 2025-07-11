@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, ValidationError
 from typing import Callable, TypeVar, Optional, Generic
 from functools import wraps
-
+from ninja import NinjaAPI
+from django.http import JsonResponse
 T = TypeVar('T')
 
 
@@ -50,7 +51,26 @@ class ErrorDetail(BaseModel):
 
 
 class ErrorResponse(BaseResponse):
-    errors: Optional[list[ErrorDetail]] = Field(None, description="错误详情列表")
+    # errors: Optional[list[ErrorDetail]] = Field(None, description="错误详情列表")
+    errors: Optional[T] = Field(None, description="错误详情列表")
+
+    def to_http_response(self, api: NinjaAPI = None):
+        """将错误响应转换为 Django HttpResponse"""
+        response_data = self.model_dump()
+        if api:
+            # 使用 NinjaAPI 的响应包装
+            return api.create_response(
+                request=None,  # 不需要实际请求对象
+                data=response_data,
+                status=self.code
+            )
+        else:
+            # 直接创建 JsonResponse
+            return JsonResponse(response_data, status=self.code)
+
+    @classmethod
+    def error(cls, code: int, message: str, errors: dict = None):
+        return cls(code=code, message=message, errors=errors)
 
     @classmethod
     def validation_error(cls, errors: list):
@@ -78,7 +98,7 @@ class ErrorResponse(BaseResponse):
         return cls(
             code=422,
             message="数据验证失败",
-            data={"detail": error_details}
+            errors={"detail": error_details}
         )
 
 
@@ -109,7 +129,7 @@ def standard_response(view_func: Callable):
             return ErrorResponse.error(
                 code=500,
                 message="服务器内部错误",
-                data={"detail": str(e)}
+                errors={"detail": str(e)}
             )
 
     return wrapper
