@@ -118,7 +118,6 @@ def standard_response(view_func: Callable):
                 data, status = result
             else:
                 data = result
-
             return BaseResponse.success(data=data)
 
         except ValidationError as e:
@@ -126,10 +125,12 @@ def standard_response(view_func: Callable):
 
         except Exception as e:
             # 其他异常处理
+            import traceback
+            traceback.print_exc()
             return ErrorResponse.error(
                 code=500,
                 message="服务器内部错误",
                 errors={"detail": str(e)}
-            )
+            ).to_http_response()
 
     return wrapper
