@@ -13,7 +13,7 @@ class PageObject(models.Model):
         ('class', 'Class Name'),
         ('link', 'Link Text'),
     )
-    po_id = models.SmallIntegerField("po页面id", primary_key=True)
+    po_id = models.SmallIntegerField("po页面id")
     name = models.CharField("元素名称", max_length=100)
     locator = models.CharField("定位表达式", max_length=255)
     locator_type = models.CharField(
@@ -59,15 +59,18 @@ class TestCase(models.Model):
                                        help_text="勾选后使用此URL而非PO的URL")
     po = models.ForeignKey(
         PageObject, on_delete=models.SET_NULL, null=True, blank=True)
-    custom_locator = models.CharField("自定义定位", max_length=255, blank=True)
+    custom_locator = models.CharField(
+        "自定义定位", max_length=255, blank=True, null=True)
     custom_locator_type = models.CharField(
-        "定位方式", max_length=10, choices=PageObject.LOCATOR_TYPES, blank=True)
-    action = models.CharField("操作类型", max_length=20, choices=ACTION_TYPES)
+        "定位方式", max_length=10, choices=PageObject.LOCATOR_TYPES, blank=True, null=True)
+    action = models.CharField("操作类型", max_length=20,
+                              choices=ACTION_TYPES)
     action_value = models.CharField(
         "操作值", max_length=255, blank=True, null=True)  # 输入文本/选择值等
     assert_type = models.CharField(
-        "断言类型", max_length=20, choices=ASSERT_TYPES, blank=True)
-    assert_expression = models.CharField("断言表达式", max_length=255, blank=True)
+        "断言类型", max_length=20, choices=ASSERT_TYPES, blank=True, null=True)
+    assert_expression = models.CharField(
+        "断言表达式", max_length=255, null=True, blank=True)
     order = models.PositiveIntegerField("执行顺序", default=0)
 
     # 获取最终URL的方法
@@ -114,10 +117,10 @@ class TestSuite(models.Model):
     name = models.CharField("用例集名称", max_length=100)
     # ... 其他字段 ...
     base_url = models.CharField("基础URL", max_length=255, default="http://localhost",
-                                help_text="所有相对URL将基于此URL拼接")
+                                help_text="所有相对URL将基于此URL拼接", null=True)
 
     environment = models.CharField(
-        "运行环境", max_length=20, choices=ENVIRONMENT_CHOICES, default='test')
+        "运行环境", max_length=20, choices=ENVIRONMENT_CHOICES, default='test', null=True)
     test_cases = models.ManyToManyField(TestCase, through='SuiteCaseRelation')
     status = models.CharField(
         "状态", max_length=10, choices=STATUS_CHOICES, default='draft')
@@ -149,21 +152,23 @@ class SuiteCaseRelation(models.Model):
 
 class Tasks(models.Model):
     STATUS_CHOICES = (
+        ('unpalyed', "未开始"),
         ('pending', '排队中'),
         ('running', '执行中'),
         ('passed', '通过'),
         ('failed', '失败'),
         ('error', '错误'),
     )
-
+    task_name = models.CharField("任务名称", max_length=20)
     test_suite = models.ForeignKey(TestSuite, on_delete=models.CASCADE)
     start_time = models.DateTimeField("开始时间", auto_now_add=True)
     end_time = models.DateTimeField("结束时间", null=True)
     status = models.CharField(
         "状态", max_length=10, choices=STATUS_CHOICES, default='pending')
-    report_url = models.URLField("报告链接", blank=True)
-    log_path = models.CharField("日志路径", max_length=255, blank=True)
-    executor = models.CharField("执行人", max_length=50, blank=True)
+    report_url = models.URLField("报告链接", blank=True, null=True, default="")
+    log_path = models.CharField(
+        "日志路径", max_length=255, blank=True, null=True, default="")
+    executor = models.CharField("执行人", max_length=50, blank=True, null=True)
 
     class Meta:
         db_table = "tasks"
