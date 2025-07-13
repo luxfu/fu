@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+# @shared_task
 def run_test_suite(execution_id):
     execution = Tasks.objects.get(id=execution_id)
     execution.status = 'running'
