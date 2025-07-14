@@ -22,6 +22,29 @@ class SeleniumExecutor:
         self.report = AllureReportGenerator(execution_id)
         self.execution_id = execution_id
 
+    def run_test_suite(self, test_suite: TestSuite):
+        try:
+            relations = test_suite.suitecaserelation_set.order_by('order')
+            # 添加环境信息
+            self._add_environment_info(test_suite)
+
+            for relation in relations:
+                test_case = relation.test_case
+                if not self.execute_action(test_case, test_suite):
+                    logger.error(f"用例 {test_case.name} 执行失败")
+                    # 可选：是否继续执行后续用例
+                    if not settings.CONTINUE_ON_FAILURE:
+                        break
+            return True
+        except Exception as e:
+            logger.exception(f"测试套件执行失败:{e}")
+            return False
+        finally:
+            self.driver.quit()
+            # 生成最终报告
+            report_path = self.report.finalize_report()
+            return report_path
+
     def execute_action(self, test_case: TestCase, test_suite: TestSuite):
         # 创建测试用例报告
         tc_report = self.report.create_test_case(
@@ -31,10 +54,13 @@ class SeleniumExecutor:
         )
 
         try:
+            logger.info(f"正在执行case id:{test_case.id},po:{test_case.po}")
             # 获取最终URL
             base_url = test_suite.get_environment_url()
             target_url = test_case.get_final_url(base_url)
 
+            if target_url:
+                self.navigate_to_url(target_url)
             if not target_url:
                 logger.error("未指定URL，无法执行操作")
                 return False
@@ -43,10 +69,12 @@ class SeleniumExecutor:
             if not self.navigate_to_url(target_url):
                 return False
             # 定位元素
-            step = self.report.add_step(
-                tc_report, f"定位元素: {test_case.final_locator}")
             locator_type, locator = (
                 test_case.final_locator_type, test_case.final_locator)
+            if not locator_type or not locator:
+                return False
+            step = self.report.add_step(
+                tc_report, f"定位元素: {locator}")
             logger.info(f"正在定位元素:{locator_type},{locator}")
             element = self.wait.until(
                 EC.presence_of_element_located(
@@ -138,30 +166,6 @@ class SeleniumExecutor:
 
         # 更新统计
         self.report.report_data["statistics"]["failed"] += 1
-
-    def run_test_suite(self, test_suite: TestSuite):
-        try:
-            relations = test_suite.suitecaserelation_set.order_by('order')
-
-            # 添加环境信息
-            self._add_environment_info(test_suite)
-
-            for relation in relations:
-                test_case = relation.test_case
-                if not self.execute_action(test_case, test_suite):
-                    logger.error(f"用例 {test_case.name} 执行失败")
-                    # 可选：是否继续执行后续用例
-                    if not settings.CONTINUE_ON_FAILURE:
-                        break
-            return True
-        except Exception as e:
-            logger.exception("测试套件执行失败")
-            return False
-        finally:
-            self.driver.quit()
-            # 生成最终报告
-            report_path = self.report.finalize_report()
-            return report_path
 
     def _add_environment_info(self, test_suite):
         # 添加环境信息到报告
