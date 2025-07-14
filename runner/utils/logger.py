@@ -3,6 +3,8 @@ import os
 from logging.handlers import RotatingFileHandler
 from django.conf import settings
 
+# 此代码暂时不用，后续统一使用settings中的logging，handler重复注册问题
+
 
 def setup_logger(
     logger_name,
@@ -62,7 +64,7 @@ def setup_logger(
     )
 
     file_format = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s",
+        "[%(asctime)s][%(name)s.%(funcName)s():%(lineno)d] [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 

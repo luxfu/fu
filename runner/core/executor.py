@@ -10,9 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from runner.models import TestCase, TestSuite
 from django.conf import settings
 from datetime import datetime
-from utils.logger import setup_logger
+from django.conf import settings
 
-logger = setup_logger(__name__)
+logger = settings.LOGGER(__name__)
 
 
 class SeleniumExecutor:

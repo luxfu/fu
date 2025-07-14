@@ -4,12 +4,13 @@ from core.executor import SeleniumExecutor
 from django.conf import settings
 from django.utils import timezone
 import os
-from utils.logger import setup_logger
+from django.conf import settings
 
-logger = setup_logger(__name__)
-
+logger = settings.LOGGER(__name__)
 
 # @shared_task
+
+
 def run_test_suite(execution_id):
     execution = Tasks.objects.get(id=execution_id)
     execution.status = 'running'
