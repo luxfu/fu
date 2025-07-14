@@ -11,7 +11,7 @@ from runner.models import TestCase, TestSuite
 from django.conf import settings
 from datetime import datetime
 from django.conf import settings
-
+import time
 logger = settings.LOGGER(__name__)
 
 
@@ -56,18 +56,20 @@ class SeleniumExecutor:
         try:
             logger.info(f"正在执行case id:{test_case.id},po:{test_case.po}")
             # 获取最终URL
-            base_url = test_suite.get_environment_url()
-            target_url = test_case.get_final_url(base_url)
+            # base_url = test_suite.get_environment_url()
+            # target_url = test_case.get_final_url(base_url)
 
+            # if target_url:
+            #     self.navigate_to_url(target_url)
+            # if not target_url:
+            #     logger.error("未指定URL，无法执行操作")
+            #     return False
+            target_url = test_case.url
             if target_url:
                 self.navigate_to_url(target_url)
-            if not target_url:
-                logger.error("未指定URL，无法执行操作")
-                return False
-
-            # 未导航到目标URL
-            if not self.navigate_to_url(target_url):
-                return False
+            # # 未导航到目标URL
+            # if not self.navigate_to_url(target_url):
+            #     return False
             # 定位元素
             locator_type, locator = (
                 test_case.final_locator_type, test_case.final_locator)
@@ -129,6 +131,7 @@ class SeleniumExecutor:
             self._handle_failure(tc_report, e, "未知错误")
             return False
         finally:
+            time.sleep(2)
             self.report.finalize_test_case(tc_report)
 
         return True

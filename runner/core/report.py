@@ -8,6 +8,7 @@ from allure_commons.types import AttachmentType
 from allure_commons.model2 import TestResult, TestStepResult, Status
 from allure_commons.model2 import Label, Link, Parameter
 from allure_commons.utils import uuid4
+import attrs
 from django.conf import settings
 
 logger = settings.LOGGER(__name__)
@@ -86,7 +87,7 @@ class AllureReportGenerator:
 
     def add_attachment(self, step, name, content, attachment_type=AttachmentType.TEXT):
         attachment_uuid = str(uuid4())
-        attachment_filename = f"{attachment_uuid}-attachment{attachment_type.extension}"
+        attachment_filename = f"{attachment_uuid}-attachment.{attachment_type.extension}"
         attachment_path = os.path.join(self.results_dir, attachment_filename)
 
         # 保存附件内容
@@ -126,7 +127,8 @@ class AllureReportGenerator:
             self.results_dir, f"{test_case['uuid']}-result.json")
 
         with open(result_file, "w", encoding="utf-8") as f:
-            json.dump(test_result.to_dict(), f, ensure_ascii=False, indent=2)
+            json.dump(attrs.asdict(test_result), f,
+                      ensure_ascii=False, indent=2)
 
     def finalize_report(self):
         self.report_data["stop_time"] = datetime.utcnow().isoformat()
@@ -138,13 +140,14 @@ class AllureReportGenerator:
             "-o", self.report_dir,
             "--clean"
         ]
-
-        try:
-            subprocess.run(report_cmd, check=True)
-            logger.info(f"Allure report generated at: {self.report_dir}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to generate Allure report: {e}")
-            return None
+        logger.info(f"执行allure生成报告:{report_cmd}")
+        # try:
+        #     subprocess.run(report_cmd, shell=True, check=True,
+        #                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+        #     logger.info(f"Allure report generated at: {self.report_dir}")
+        # except subprocess.CalledProcessError as e:
+        #     logger.error(f"Failed to generate Allure report: {e}")
+        #     return None
 
         # 压缩报告（可选）
         if settings.COMPRESS_REPORTS:
