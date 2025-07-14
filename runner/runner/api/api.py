@@ -34,9 +34,8 @@ def handle_business_exception(request, exc: BusinessException):
 @api.exception_handler(NinjaValidationErr)
 def handle_validation_error(request, exc):
     # 获取错误列表
-    print(111)
     if hasattr(exc, 'errors'):
-        errors = exc.errors  # Django Ninja 的错误格式
+        errors = exc.errors()  # Django Ninja 的错误格式
     elif hasattr(exc, 'errors') and callable(exc.errors):
         errors = exc.errors()  # Pydantic v2 的错误格式
     else:
@@ -48,7 +47,6 @@ def handle_validation_error(request, exc):
 
 @api.exception_handler(Exception)
 def handle_generic_exception(request, exc: Exception):
-    print(222)
     import traceback
     traceback.print_exc()  # 控制台或日志文件输出错误记录
     return api.create_response(

@@ -36,7 +36,7 @@ class SeleniumExecutor:
             target_url = test_case.get_final_url(base_url)
 
             if not target_url:
-                self.logger.error("未指定URL，无法执行操作")
+                logger.error("未指定URL，无法执行操作")
                 return False
 
             # 未导航到目标URL
@@ -107,10 +107,10 @@ class SeleniumExecutor:
         try:
             current_url = self.driver.current_url
             if current_url == url:
-                self.logger.info(f"已在目标页面: {url}")
+                logger.info(f"已在目标页面: {url}")
                 return True
 
-            self.logger.info(f"导航到: {url}")
+            logger.info(f"导航到: {url}")
             self.driver.get(url)
 
             # 等待页面加载完成
@@ -120,7 +120,7 @@ class SeleniumExecutor:
             )
             return True
         except WebDriverException as e:
-            self.logger.error(f"导航失败: {str(e)}")
+            logger.error(f"导航失败: {str(e)}")
             return False
 
     def _handle_failure(self, tc_report, exception, step_name):
