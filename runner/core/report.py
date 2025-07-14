@@ -2,15 +2,15 @@ import os
 import json
 import shutil
 import subprocess
-import logging
 from datetime import datetime
 from django.conf import settings
 from allure_commons.types import AttachmentType
 from allure_commons.model2 import TestResult, TestStepResult, Status
 from allure_commons.model2 import Label, Link, Parameter
 from allure_commons.utils import uuid4
+from utils.logger import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class AllureReportGenerator:

@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 from .report import AllureReportGenerator
 from allure_commons.types import AttachmentType
 from allure_commons.model2 import Status
@@ -11,8 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from runner.models import TestCase, TestSuite
 from django.conf import settings
 from datetime import datetime
+from utils.logger import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class SeleniumExecutor:
@@ -45,9 +45,12 @@ class SeleniumExecutor:
             # 定位元素
             step = self.report.add_step(
                 tc_report, f"定位元素: {test_case.final_locator}")
+            locator_type, locator = (
+                test_case.final_locator_type, test_case.final_locator)
+            logger.info(f"正在定位元素:{locator_type},{locator}")
             element = self.wait.until(
                 EC.presence_of_element_located(
-                    (test_case.final_locator_type, test_case.final_locator)
+                    (locator_type, locator)
                 )
             )
             self.report.add_screenshot(step, self.driver, "定位后截图")

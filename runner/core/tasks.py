@@ -4,8 +4,9 @@ from core.executor import SeleniumExecutor
 from django.conf import settings
 from django.utils import timezone
 import os
-import logging
-logger = logging.getLogger(__name__)
+from utils.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 # @shared_task
