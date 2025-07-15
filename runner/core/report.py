@@ -257,12 +257,9 @@ class AllureReportGenerator:
         ]
         logger.info(f"执行报告生成命令: {' '.join(report_cmd)}")
         try:
-            env = os.environ.copy()
-            logger.info(f"env:{env}")
             # 添加详细的日志记录
             result = subprocess.run(
                 report_cmd,
-                env=env,
                 shell=True,
                 check=True
             )
