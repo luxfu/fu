@@ -2,168 +2,286 @@ import os
 import json
 import shutil
 import subprocess
+import uuid
 from datetime import datetime
-from django.conf import settings
+from typing import Dict, List, Optional
 from allure_commons.types import AttachmentType
-from allure_commons.model2 import TestResult, TestStepResult, Status
-from allure_commons.model2 import Label, Link, Parameter
-from allure_commons.utils import uuid4
-import attrs
+from allure_commons.model2 import Status
 from django.conf import settings
 
 logger = settings.LOGGER(__name__)
 
 
 class AllureReportGenerator:
-    def __init__(self, execution_id):
+    def __init__(self, execution_id: str):
         self.execution_id = execution_id
-        self.report_dir = self._get_report_dir()
-        self.results_dir = os.path.join(self.report_dir, "results")
-        self.report_data = {
-            "test_cases": [],
-            "start_time": datetime.utcnow().isoformat(),
-            "stop_time": None,
-            "status": "passed",
-            "statistics": {
-                "passed": 0,
-                "failed": 0,
-                "broken": 0,
-                "skipped": 0,
-                "total": 0
-            }
-        }
-        os.makedirs(self.results_dir, exist_ok=True)
+        self.base_dir = self._get_base_dir()
+        self.report_dir = os.path.join(self.base_dir, "reports")
+        self.results_dir = os.path.join(self.base_dir, "results")
+        self.attachments_dir = os.path.join(self.results_dir, "attachments")
 
-    def _get_report_dir(self):
+        # 创建目录
+        os.makedirs(self.results_dir, exist_ok=True)
+        os.makedirs(self.attachments_dir, exist_ok=True)
+
+        # 存储测试用例和容器
+        self.test_cases: Dict[str, dict] = {}
+        self.containers: Dict[str, dict] = {}
+
+        # 按套件分组存储测试用例UUID
+        self.suite_children: Dict[str, List[str]] = {}
+
+        # 记录开始时间（毫秒时间戳）
+        self.start_time = int(datetime.utcnow().timestamp() * 1000)
+
+    def _get_base_dir(self) -> str:
+        """生成报告目录路径"""
         base_dir = settings.REPORTS_ROOT
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        return os.path.join(base_dir, f"execution_{self.execution_id}_{timestamp}")
+        return os.path.join(base_dir, f"{self.execution_id}_{timestamp}")
 
-    def create_test_case(self, name, description="", suite="Default Suite", tags=None):
+    def create_test_case(self, name: str, full_name: str, suite: str,
+                         description: str = "", tags: Optional[List[str]] = None,
+                         links: Optional[List[Dict]] = None, epic: Optional[str] = None,
+                         feature: Optional[str] = None, story: Optional[str] = None,
+                         severity: Optional[str] = None) -> dict:
+        """创建测试用例"""
+        test_uuid = str(uuid.uuid4())
+
+        # 构建测试用例的基本结构
         test_case = {
-            "uuid": str(uuid4()),
             "name": name,
-            "fullName": f"{suite}.{name}",
-            "labels": [
-                Label(name="suite", value=suite),
-                Label(name="framework", value="django-selenium")
-            ],
-            "links": [],
-            "parameters": [],
-            "steps": [],
-            "attachments": [],
-            "status": Status.PASSED,
-            "statusDetails": None,
+            "status": Status.PASSED,  # 直接使用Status枚举值
             "description": description,
-            "start": datetime.utcnow().isoformat(),
+            "steps": [],
+            "start": self.start_time,
             "stop": None,
-            "historyId": str(uuid4())
+            "uuid": test_uuid,
+            "historyId": str(uuid.uuid4()),
+            "testCaseId": str(uuid.uuid4()),
+            "fullName": full_name,
+            "labels": [
+                {"name": "suite", "value": suite},
+                {"name": "framework", "value": "django-selenium"}
+            ],
+            "links": links or []
         }
 
+        # 添加标签
         if tags:
             for tag in tags:
-                test_case["labels"].append(Label(name="tag", value=tag))
+                test_case["labels"].append({"name": "tag", "value": tag})
+        if epic:
+            test_case["labels"].append({"name": "epic", "value": epic})
+        if feature:
+            test_case["labels"].append({"name": "feature", "value": feature})
+        if story:
+            test_case["labels"].append({"name": "story", "value": story})
+        if severity:
+            test_case["labels"].append({"name": "severity", "value": severity})
 
-        self.report_data["test_cases"].append(test_case)
-        self.report_data["statistics"]["total"] += 1
+        # 存储测试用例
+        self.test_cases[test_uuid] = test_case
+
+        # 按套件分组
+        if suite not in self.suite_children:
+            self.suite_children[suite] = []
+        self.suite_children[suite].append(test_uuid)
+
         return test_case
 
-    def add_step(self, test_case, name, status=Status.PASSED, attachments=None):
-        step = TestStepResult(
-            name=name,
-            status=status,
-            start=datetime.utcnow().isoformat(),
-            stop=datetime.utcnow().isoformat(),
-            attachments=attachments or []
-        )
+    def add_step(self, test_case: dict, name: str, status: Status = Status.PASSED) -> dict:
+        """添加步骤到测试用例"""
+        step = {
+            "name": name,
+            "status": status,  # 直接使用Status枚举值
+            "start": int(datetime.utcnow().timestamp() * 1000),
+            "stop": int(datetime.utcnow().timestamp() * 1000),
+            "attachments": []
+        }
         test_case["steps"].append(step)
 
-        # 更新测试用例状态
-        if status in [Status.FAILED, Status.BROKEN] and test_case["status"] == Status.PASSED:
+        # 更新测试用例状态：如果步骤失败且当前用例状态是通过，则更新状态
+        if status != Status.PASSED and test_case["status"] == Status.PASSED:
             test_case["status"] = status
-            self._update_statistics(status)
 
         return step
 
-    def add_attachment(self, step, name, content, attachment_type=AttachmentType.TEXT):
-        attachment_uuid = str(uuid4())
-        attachment_filename = f"{attachment_uuid}-attachment.{attachment_type.extension}"
-        attachment_path = os.path.join(self.results_dir, attachment_filename)
+    def add_attachment(self, step: dict, name: str, content: bytes, attachment_type: AttachmentType) -> str:
+        """添加附件到步骤"""
+        attachment_uuid = str(uuid.uuid4())
+        extension = attachment_type.extension
+        filename = f"{attachment_uuid}-attachment.{extension}"
+        filepath = os.path.join(self.attachments_dir, filename)
 
-        # 保存附件内容
+        # 保存附件内容 - 根据内容类型决定写入方式
         if isinstance(content, str):
-            with open(attachment_path, "w", encoding="utf-8") as f:
-                f.write(content)
-        elif isinstance(content, bytes):
-            with open(attachment_path, "wb") as f:
+            # 字符串内容使用文本模式写入
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
         else:
-            logger.warning(
-                f"Unsupported attachment content type: {type(content)}")
-            return None
+            # 字节内容使用二进制模式写入
+            with open(filepath, "wb") as f:
+                f.write(content)
 
-        # 创建附件对象
+        # 记录附件信息
         attachment = {
             "name": name,
-            "source": attachment_filename,
-            "type": attachment_type.value
+            "source": f"attachments/{filename}",
+            "type": attachment_type.value[0]  # 取MIME类型，例如'image/png'
         }
+        step["attachments"].append(attachment)
+        return filepath
 
-        step.attachments.append(attachment)
-        return attachment
+    def add_screenshot(self, step: dict, driver, name: str = "Screenshot") -> Optional[str]:
+        """添加Selenium截图到步骤"""
+        try:
+            if hasattr(driver, "get_screenshot_as_png"):
+                screenshot = driver.get_screenshot_as_png()
+                return self.add_attachment(step, name, screenshot, AttachmentType.PNG)
+            return None
+        except Exception as e:
+            logger.error(f"截图失败: {e}")
+            return None
 
-    def add_screenshot(self, step, driver, name="Screenshot"):
-        if hasattr(driver, "get_screenshot_as_png"):
-            screenshot = driver.get_screenshot_as_png()
-            return self.add_attachment(step, name, screenshot, AttachmentType.PNG)
-        return None
+    def finalize_test_case(self, test_case: dict):
+        """结束测试用例：设置停止时间并保存为result.json文件"""
+        if test_case.get("stop") is None:
+            test_case["stop"] = int(datetime.utcnow().timestamp() * 1000)
 
-    def finalize_test_case(self, test_case):
-        test_case["stop"] = datetime.utcnow().isoformat()
-
-        # 保存测试用例结果文件
-        test_result = TestResult(**test_case)
+        # 保存为result.json文件
         result_file = os.path.join(
             self.results_dir, f"{test_case['uuid']}-result.json")
-
         with open(result_file, "w", encoding="utf-8") as f:
-            json.dump(attrs.asdict(test_result), f,
-                      ensure_ascii=False, indent=2)
+            json.dump(test_case, f, ensure_ascii=False, indent=2)
+        logger.debug(f"保存测试用例结果: {result_file}")
 
-    def finalize_report(self):
-        self.report_data["stop_time"] = datetime.utcnow().isoformat()
-
-        # 生成Allure报告
-        report_cmd = [
-            "allure", "generate",
-            self.results_dir,
-            "-o", self.report_dir,
-            "--clean"
+    def _create_categories_file(self):
+        """创建categories.json文件解决root节点empty问题"""
+        categories = [
+            {
+                "name": "Ignored tests",
+                "matchedStatuses": ["skipped"]
+            },
+            {
+                "name": "Infrastructure problems",
+                "matchedStatuses": ["broken", "failed"],
+                "messageRegex": ".*bye-bye.*"
+            },
+            {
+                "name": "Outdated tests",
+                "matchedStatuses": ["broken"],
+                "traceRegex": ".*FileNotFoundException.*"
+            },
+            {
+                "name": "Product defects",
+                "matchedStatuses": ["failed"]
+            },
+            {
+                "name": "Test defects",
+                "matchedStatuses": ["broken"]
+            }
         ]
-        logger.info(f"执行allure生成报告:{report_cmd}")
-        # try:
-        #     subprocess.run(report_cmd, shell=True, check=True,
-        #                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
-        #     logger.info(f"Allure report generated at: {self.report_dir}")
-        # except subprocess.CalledProcessError as e:
-        #     logger.error(f"Failed to generate Allure report: {e}")
-        #     return None
 
-        # 压缩报告（可选）
-        if settings.COMPRESS_REPORTS:
-            self._compress_report()
+        categories_file = os.path.join(self.results_dir, "categories.json")
+        with open(categories_file, "w", encoding="utf-8") as f:
+            json.dump(categories, f, ensure_ascii=False, indent=2)
+        logger.debug(f"创建分类文件: {categories_file}")
 
+    def generate_container_files(self):
+        """生成所有容器文件"""
+        # 为每个测试套件创建容器
+        for suite, children in self.suite_children.items():
+            container_uuid = str(uuid.uuid4())
+            container = {
+                "uuid": container_uuid,
+                "name": f"{suite} Suite",  # 添加容器名称
+                "children": children,
+                "befores": [{
+                    "name": f"{suite}_setup",
+                    "status": Status.PASSED,
+                    "start": self.start_time,
+                    "stop": self.start_time
+                }],
+                "afters": [],
+                "start": self.start_time,
+                "stop": int(datetime.utcnow().timestamp() * 1000)
+            }
+            self.containers[container_uuid] = container
+
+        # 创建全局容器
+        global_container_uuid = str(uuid.uuid4())
+        global_container = {
+            "uuid": global_container_uuid,
+            "name": "Global Container",  # 添加容器名称
+            "children": list(self.test_cases.keys()),
+            "befores": [{
+                "name": "global_setup",
+                "status": Status.PASSED,
+                "start": self.start_time,
+                "stop": self.start_time
+            }],
+            "afters": [],
+            "start": self.start_time,
+            "stop": int(datetime.utcnow().timestamp() * 1000)
+        }
+        self.containers[global_container_uuid] = global_container
+
+        # 保存所有容器文件
+        for container_uuid, container_data in self.containers.items():
+            container_file = os.path.join(
+                self.results_dir, f"{container_uuid}-container.json")
+            with open(container_file, "w", encoding="utf-8") as f:
+                json.dump(container_data, f, ensure_ascii=False, indent=2)
+            logger.debug(f"创建容器文件: {container_file}")
+
+    def generate_report(self):
+        """生成完整的Allure报告"""
+        # 1. 完成所有测试用例
+        for test_case in self.test_cases.values():
+            self.finalize_test_case(test_case)
+
+        # 2. 生成容器文件
+        self.generate_container_files()
+
+        # 3. 创建分类文件
+        self._create_categories_file()
+
+        # 4. 确保所有文件都已写入
+        logger.info(f"结果目录内容: {os.listdir(self.results_dir)}")
+
+        # 5. 生成Allure报告
+        report_cmd = [
+            "allure", "generate", self.results_dir,
+            "-o", self.report_dir, "--clean"
+        ]
+        logger.info(f"执行报告生成命令: {' '.join(report_cmd)}")
+        try:
+            env = os.environ.copy()
+            logger.info(f"env:{env}")
+            # 添加详细的日志记录
+            result = subprocess.run(
+                report_cmd,
+                env=env,
+                shell=True,
+                check=True
+            )
+            logger.info(f"报告生成成功: {self.report_dir}")
+            logger.debug(f"Allure输出: {result.stdout}")
+
+            # 检查报告文件是否存在
+            report_index = os.path.join(self.report_dir, "index.html")
+            if os.path.exists(report_index):
+                logger.info(f"报告文件已生成: {report_index}")
+            else:
+                logger.error(f"报告文件未生成! 目录内容: {os.listdir(self.report_dir)}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"生成报告失败: {e}")
+        except Exception as e:
+            logger.exception(f"生成报告时发生未知错误: {e}")
+
+        return self.report_dir
+
+    def get_report_path(self):
+        """获取报告入口文件路径"""
         return os.path.join(self.report_dir, "index.html")
-
-    def _update_statistics(self, status):
-        status_str = status.value.lower()
-        if status_str in self.report_data["statistics"]:
-            self.report_data["statistics"][status_str] += 1
-
-        # 更新整体执行状态
-        if status in [Status.FAILED, Status.BROKEN]:
-            self.report_data["status"] = "failed"
-
-    def _compress_report(self):
-        shutil.make_archive(self.report_dir, 'zip', self.report_dir)
-        return f"{self.report_dir}.zip"
