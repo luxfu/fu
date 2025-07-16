@@ -22,6 +22,8 @@ def create_task(request, payload: TasksIn):
     return BaseResponse.success(data=task)
 
 
-@router.post("/task/run", response=BaseResponse)
+@router.post("/task/run", response=BaseResponse[TasksOut])
 def run_task(request, task_id: int):
     run_test_suite(task_id)
+    task = Tasks.objects.get(id=task_id)
+    return BaseResponse.success(data=task)
