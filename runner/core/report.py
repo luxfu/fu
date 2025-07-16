@@ -1,6 +1,6 @@
 import os
 import json
-import shutil
+import traceback
 import subprocess
 import uuid
 from datetime import datetime
@@ -52,6 +52,7 @@ class AllureReportGenerator:
         test_case = {
             "name": name,
             "status": Status.PASSED,  # 直接使用Status枚举值
+            "statusDetail": {},
             "description": description,
             "steps": [],
             "start": self.start_time,
@@ -90,7 +91,7 @@ class AllureReportGenerator:
 
         return test_case
 
-    def add_step(self, test_case: dict, name: str, status: Status = Status.PASSED) -> dict:
+    def add_step(self, test_case: dict, name: str, status: Status = Status.PASSED, exception: Optional[Exception] = None) -> dict:
         """添加步骤到测试用例"""
         step = {
             "name": name,
@@ -99,13 +100,30 @@ class AllureReportGenerator:
             "stop": int(datetime.utcnow().timestamp() * 1000),
             "attachments": []
         }
-        test_case["steps"].append(step)
+        # 如果步骤失败且有异常，添加statusDetails
+        if status in [Status.FAILED, Status.BROKEN] and exception:
+            step["statusDetails"] = self._create_status_details(exception)
+            test_case["steps"].append(step)
 
         # 更新测试用例状态：如果步骤失败且当前用例状态是通过，则更新状态
         if status != Status.PASSED and test_case["status"] == Status.PASSED:
             test_case["status"] = status
 
         return step
+
+    def _create_status_details(self, exception: Exception) -> dict:
+        """创建状态详情信息"""
+        # 获取异常类型和消息
+        exc_type = type(exception).__name__
+        exc_message = str(exception)
+
+        # 获取堆栈跟踪
+        exc_traceback = traceback.format_exc()
+
+        return {
+            "message": f"{exc_type}: {exc_message}",
+            "trace": exc_traceback
+        }
 
     def add_attachment(self, step: dict, name: str, content: bytes, attachment_type: AttachmentType) -> str:
         """添加附件到步骤"""
@@ -144,10 +162,16 @@ class AllureReportGenerator:
             logger.error(f"截图失败: {e}")
             return None
 
-    def finalize_test_case(self, test_case: dict):
+    def finalize_test_case(self, test_case: dict, exception: Optional[Exception] = None):
         """结束测试用例：设置停止时间并保存为result.json文件"""
         if test_case.get("stop") is None:
             test_case["stop"] = int(datetime.utcnow().timestamp() * 1000)
+
+        # 如果测试用例失败且有异常，添加statusDetails
+        if test_case["status"] in [Status.FAILED, Status.BROKEN] and exception:
+            if "statusDetails" not in test_case:
+                test_case["statusDetails"] = self._create_status_details(
+                    exception)
 
         # 保存为result.json文件
         result_file = os.path.join(
@@ -198,7 +222,7 @@ class AllureReportGenerator:
                 "name": f"{suite} Suite",  # 添加容器名称
                 "children": children,
                 "befores": [{
-                    "name": f"{suite}_setup",
+                    "name": f"{suite}",
                     "status": Status.PASSED,
                     "start": self.start_time,
                     "stop": self.start_time
@@ -209,23 +233,23 @@ class AllureReportGenerator:
             }
             self.containers[container_uuid] = container
 
-        # 创建全局容器
-        global_container_uuid = str(uuid.uuid4())
-        global_container = {
-            "uuid": global_container_uuid,
-            "name": "Global Container",  # 添加容器名称
-            "children": list(self.test_cases.keys()),
-            "befores": [{
-                "name": "global_setup",
-                "status": Status.PASSED,
-                "start": self.start_time,
-                "stop": self.start_time
-            }],
-            "afters": [],
-            "start": self.start_time,
-            "stop": int(datetime.utcnow().timestamp() * 1000)
-        }
-        self.containers[global_container_uuid] = global_container
+        # # 创建全局容器
+        # global_container_uuid = str(uuid.uuid4())
+        # global_container = {
+        #     "uuid": global_container_uuid,
+        #     "name": "Global Container",  # 添加容器名称
+        #     "children": list(self.test_cases.keys()),
+        #     "befores": [{
+        #         "name": "global_setup",
+        #         "status": Status.PASSED,
+        #         "start": self.start_time,
+        #         "stop": self.start_time
+        #     }],
+        #     "afters": [],
+        #     "start": self.start_time,
+        #     "stop": int(datetime.utcnow().timestamp() * 1000)
+        # }
+        # self.containers[global_container_uuid] = global_container
 
         # 保存所有容器文件
         for container_uuid, container_data in self.containers.items():

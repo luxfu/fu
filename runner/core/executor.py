@@ -26,18 +26,18 @@ class SeleniumExecutor:
     def _create_environment_file(self):
         """创建环境信息文件"""
         env_info = {
-            "测试套件": "未指定",
-            "浏览器": self.driver.name,
-            "浏览器版本": self.driver.capabilities.get('browserVersion', '未知'),
-            "执行时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "平台": os.name,
-            "Python版本": sys.version
+            "Suite": "",
+            "Driver": self.driver.name,
+            "Browser": self.driver.capabilities.get('browserVersion', '未知'),
+            "Create Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Platform": os.name,
+            "Python": sys.version
         }
 
         # 在报告结果目录创建environment.properties文件
         env_file = os.path.join(self.report.results_dir,
                                 "environment.properties")
-        with open(env_file, "w", encoding="gbk") as f:
+        with open(env_file, "w", encoding="utf-8") as f:
             for key, value in env_info.items():
                 f.write(f"{key}={value}\n")
 
@@ -146,7 +146,6 @@ class SeleniumExecutor:
                             raise AssertionError(
                                 f"文本断言失败: 期望 '{test_case.assert_expression}', 实际 '{actual_text}'"
                             )
-
                     elif test_case.assert_type == 'attr':
                         attr, expected_value = test_case.assert_expression.split(
                             '=', 1)
@@ -205,7 +204,7 @@ class SeleniumExecutor:
 
     def _handle_failure(self, tc_report, exception, step_name):
         error_step = self.report.add_step(tc_report, step_name, Status.FAILED)
-
+        self.report.finalize_test_case(tc_report, exception)
         # 添加错误详情附件
         self.report.add_attachment(
             error_step,
