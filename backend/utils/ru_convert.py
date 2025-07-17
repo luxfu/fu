@@ -12,7 +12,7 @@ class RuleConvert:
     @staticmethod
     def to_underline(x):
         """转下划线命名"""
-        return re.sub('(?<=[a-z])[A-Z]|(?<!^)[A-Z](?=[a-z])', '_\g<0>', x).lower()
+        return re.sub('(?<=[a-z])[A-Z]|(?<!^)[A-Z](?=[a-z])', r'_\g<0>', x).lower()
 
     @staticmethod
     def to_upper_camel_case(x):
