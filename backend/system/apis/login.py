@@ -18,12 +18,12 @@ from utils.fu_jwt import FuJwt
 from utils.fu_response import FuResponse
 from utils.request_util import save_login_log
 from utils.usual import get_user_info_from_token
-
+from typing import Optional
 router = Router()
 
 
 class SchemaOut(ModelSchema):
-    homePath: str = Field(None, alias="home_path")
+    homePath: Optional[str] = Field(None, alias="home_path")
 
     class Config:
         model = Users
@@ -31,12 +31,12 @@ class SchemaOut(ModelSchema):
 
 
 class LoginSchema(Schema):
-    username: str = Field(None, alias="username")
-    password: str = Field(None, alias="password")
+    username: Optional[str] = Field(None, alias="username")
+    password: Optional[str] = Field(None, alias="password")
 
 
 class Out(Schema):
-    multi_depart: str
+    multi_depart: int
     sysAllDictItems: str
     departs: str
     userInfo: SchemaOut
@@ -63,7 +63,8 @@ def login(request, data: LoginSchema):
         del user_obj_dic['avatar']
 
         time_now = int(datetime.now().timestamp())
-        jwt = FuJwt(SECRET_KEY, user_obj_dic, valid_to=time_now + TOKEN_LIFETIME)
+        jwt = FuJwt(SECRET_KEY, user_obj_dic,
+                    valid_to=time_now + TOKEN_LIFETIME)
         # 将生成的token加入缓存
         # cache.set(user_obj.id, jwt.encode())
         token = f"bearer {jwt.encode()}"
@@ -107,7 +108,8 @@ def route_menu_tree(request):
 
         # queryset = MenuButton.objects.filter(id__in=menuIds, status=1).values()
         queryset_button = MenuButton.objects.filter(id__in=menu_button_ids)
-        queryset_column = MenuColumnField.objects.filter(id__in=menu_column_ids)
+        queryset_column = MenuColumnField.objects.filter(
+            id__in=menu_column_ids)
     else:
         queryset_button = MenuButton.objects.all()
         queryset_column = MenuColumnField.objects.all()
