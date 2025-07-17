@@ -3,7 +3,7 @@ import json
 import traceback
 import subprocess
 import uuid
-from datetime import datetime
+import time
 from typing import Dict, List, Optional
 from allure_commons.types import AttachmentType
 from allure_commons.model2 import Status
@@ -19,7 +19,7 @@ class AllureReportGenerator:
         self.report_dir = os.path.join(self.base_dir, "reports")
         self.results_dir = os.path.join(self.base_dir, "results")
         self.attachments_dir = os.path.join(self.results_dir, "attachments")
-
+        self.status = 'passed'  # 只是为了判断整体是否成功，有一个step失败都算失败
         # 创建目录
         os.makedirs(self.results_dir, exist_ok=True)
         os.makedirs(self.attachments_dir, exist_ok=True)
@@ -32,12 +32,12 @@ class AllureReportGenerator:
         self.suite_children: Dict[str, List[str]] = {}
 
         # 记录开始时间（毫秒时间戳）
-        self.start_time = int(datetime.utcnow().timestamp() * 1000)
+        self.start_time = int(time.time() * 1000)
 
     def _get_base_dir(self) -> str:
         """生成报告目录路径"""
         base_dir = settings.REPORTS_ROOT
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
         return os.path.join(base_dir, f"{self.execution_id}_{timestamp}")
 
     def create_test_case(self, name: str, full_name: str, suite: str,
@@ -96,14 +96,15 @@ class AllureReportGenerator:
         step = {
             "name": name,
             "status": status,  # 直接使用Status枚举值
-            "start": int(datetime.utcnow().timestamp() * 1000),
-            "stop": int(datetime.utcnow().timestamp() * 1000),
+            "start": int(time.time() * 1000),
+            "stop": int(time.time() * 1000),
             "attachments": []
         }
         # 如果步骤失败且有异常，添加statusDetails
         if status in [Status.FAILED, Status.BROKEN] and exception:
             step["statusDetails"] = self._create_status_details(exception)
             test_case["steps"].append(step)
+            self.status = 'failed'
 
         # 更新测试用例状态：如果步骤失败且当前用例状态是通过，则更新状态
         if status != Status.PASSED and test_case["status"] == Status.PASSED:
@@ -165,7 +166,7 @@ class AllureReportGenerator:
     def finalize_test_case(self, test_case: dict, exception: Optional[Exception] = None):
         """结束测试用例：设置停止时间并保存为result.json文件"""
         if test_case.get("stop") is None:
-            test_case["stop"] = int(datetime.utcnow().timestamp() * 1000)
+            test_case["stop"] = int(time.time() * 1000)
 
         # 如果测试用例失败且有异常，添加statusDetails
         if test_case["status"] in [Status.FAILED, Status.BROKEN] and exception:
@@ -229,27 +230,9 @@ class AllureReportGenerator:
                 }],
                 "afters": [],
                 "start": self.start_time,
-                "stop": int(datetime.utcnow().timestamp() * 1000)
+                "stop": int(time.time() * 1000)
             }
             self.containers[container_uuid] = container
-
-        # # 创建全局容器
-        # global_container_uuid = str(uuid.uuid4())
-        # global_container = {
-        #     "uuid": global_container_uuid,
-        #     "name": "Global Container",  # 添加容器名称
-        #     "children": list(self.test_cases.keys()),
-        #     "befores": [{
-        #         "name": "global_setup",
-        #         "status": Status.PASSED,
-        #         "start": self.start_time,
-        #         "stop": self.start_time
-        #     }],
-        #     "afters": [],
-        #     "start": self.start_time,
-        #     "stop": int(datetime.utcnow().timestamp() * 1000)
-        # }
-        # self.containers[global_container_uuid] = global_container
 
         # 保存所有容器文件
         for container_uuid, container_data in self.containers.items():

@@ -67,7 +67,6 @@ class SeleniumExecutor:
             self.driver.quit()
             # 生成最终报告
             report_path = self.report.generate_report()
-            logger.info(f"测试报告已生成: {report_path}")
             return report_path
 
     def execute_action(self, test_case: TestCase, test_suite: TestSuite):

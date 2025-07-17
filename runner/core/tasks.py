@@ -22,8 +22,7 @@ def run_test_suite(execution_id):
 
         if report_path:
             # 更新执行记录
-            execution.status = 'passed' if executor.report.report_data[
-                'status'] == 'passed' else 'failed'
+            execution.status = 'passed' if executor.report.status == 'passed' else 'failed'
             execution.report_path = report_path
 
             # 保存报告路径到数据库
