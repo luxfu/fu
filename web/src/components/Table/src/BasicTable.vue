@@ -1,28 +1,15 @@
 <template>
   <div ref="wrapRef" :class="getWrapperClass">
-    <BasicForm
-        ref="formRef"
-        submitOnReset
-        v-bind="getFormProps"
-        v-if="getBindValues.useSearchForm"
-        :tableAction="tableAction"
-        @register="registerForm"
-        @submit="handleSearchInfoChange"
-        @advanced-change="redoHeight"
-    >
+    <BasicForm ref="formRef" submitOnReset v-bind="getFormProps" v-if="getBindValues.useSearchForm"
+      :tableAction="tableAction" @register="registerForm" @submit="handleSearchInfoChange"
+      @advanced-change="redoHeight">
       <template #[replaceFormSlotKey(item)]="data" v-for="item in getFormSlotKeys">
         <slot :name="item" v-bind="data || {}"></slot>
       </template>
     </BasicForm>
 
-    <Table
-        ref="tableElRef"
-        v-bind="getBindValues"
-        :rowClassName="getRowClassName"
-        v-show="getEmptyDataIsShowTable"
-        @change="handleTableChange"
-        @resize-column="setColumnWidth"
-    >
+    <Table ref="tableElRef" v-bind="getBindValues" :rowClassName="getRowClassName" v-show="getEmptyDataIsShowTable"
+      @change="handleTableChange" @resize-column="setColumnWidth">
       <template #[item]="data" v-for="item in Object.keys($slots)" :key="item">
         <slot :name="item" v-bind="data || {}"></slot>
       </template>
@@ -123,10 +110,10 @@ export default defineComponent({
     const isFixedHeightPage = inject(PageWrapperFixedHeightKey, false);
     watchEffect(() => {
       unref(isFixedHeightPage) &&
-      props.canResize &&
-      warn(
+        props.canResize &&
+        warn(
           "'canResize' of BasicTable may not work in PageWrapper with 'fixedHeight' (especially in hot updates)",
-      );
+        );
     });
 
     const { getLoading, setLoading } = useLoading(getProps);
@@ -165,16 +152,16 @@ export default defineComponent({
       getAutoCreateKey,
       updateTableData,
     } = useDataSource(
-        getProps,
-        {
-          tableData,
-          getPaginationInfo,
-          setLoading,
-          setPagination,
-          getFieldsValue: formActions.getFieldsValue,
-          clearSelectedRowKeys,
-        },
-        emit,
+      getProps,
+      {
+        tableData,
+        getPaginationInfo,
+        setLoading,
+        setPagination,
+        getFieldsValue: formActions.getFieldsValue,
+        clearSelectedRowKeys,
+      },
+      emit,
     );
 
     function handleTableChange(pagination: any, filters: any, sorter: any, extra: any) {
@@ -197,13 +184,13 @@ export default defineComponent({
     } = useColumns(getProps, getPaginationInfo);
 
     const { getScrollRef, redoHeight } = useTableScroll(
-        getProps,
-        tableElRef,
-        getColumnsRef,
-        getRowSelectionRef,
-        getDataSourceRef,
-        wrapRef,
-        formRef,
+      getProps,
+      tableElRef,
+      getColumnsRef,
+      getRowSelectionRef,
+      getDataSourceRef,
+      wrapRef,
+      formRef,
     );
 
     const { scrollTo } = useTableScrollTo(tableElRef, getDataSourceRef);
@@ -219,9 +206,9 @@ export default defineComponent({
     const { getRowClassName } = useTableStyle(getProps, prefixCls);
 
     const { getExpandOption, expandAll, expandRows, collapseAll } = useTableExpand(
-        getProps,
-        tableData,
-        emit,
+      getProps,
+      tableData,
+      emit,
     );
 
     const handlers: InnerHandlers = {
@@ -235,14 +222,14 @@ export default defineComponent({
     const { getHeaderProps } = useTableHeader(getProps, slots, handlers);
 
     const { getFooterProps } = useTableFooter(
-        getProps,
-        getScrollRef,
-        tableElRef,
-        getDataSourceRef,
+      getProps,
+      getScrollRef,
+      tableElRef,
+      getDataSourceRef,
     );
 
     const { getFormProps, replaceFormSlotKey, getFormSlotKeys, handleSearchInfoChange } =
-        useTableForm(getProps, slots, fetch, getLoading);
+      useTableForm(getProps, slots, fetch, getLoading);
 
     const getBindValues = computed(() => {
       const dataSource = unref(getDataSourceRef);
@@ -367,8 +354,9 @@ export default defineComponent({
 @prefix-cls: ~'@{namespace}-basic-table';
 
 [data-theme='dark'] {
-  .ant-table-tbody > tr:hover.ant-table-row-selected > td,
-  .ant-table-tbody > tr.ant-table-row-selected td {
+
+  .ant-table-tbody>tr:hover.ant-table-row-selected>td,
+  .ant-table-tbody>tr.ant-table-row-selected td {
     background-color: #262626;
   }
 }
