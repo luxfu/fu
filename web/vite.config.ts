@@ -17,6 +17,14 @@ export default defineApplicationConfig({
     server: {
       port: 3000,
       proxy: {
+        '/basic-api/runner': {
+          target: 'http://127.0.0.1:8080',
+          changeOrigin: true,
+          ws: true,
+          rewrite: (path) => path.replace(new RegExp(`^/basic-api`), ''),
+          // only https
+          // secure: false
+        },
         '/basic-api': {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
