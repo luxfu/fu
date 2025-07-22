@@ -221,4 +221,9 @@ export default {
     secondText: '秒',
     dayText: '天',
   },
+  project:{
+    name:'项目名称',
+    status: '项目状态',
+    createTime:'创建时间',
+  }
 };

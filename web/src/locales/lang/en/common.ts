@@ -221,4 +221,9 @@ export default {
     secondText: 'Second',
     dayText: 'Day',
   },
+    project:{
+    name:'Project Name',
+    status: 'Project Status',
+    createTime:'Create Time',
+  }
 };
