@@ -39,6 +39,6 @@ def create_project(request, payload: ProjectIn):
 
 
 @router.get("", response=PaginatedResponse[PorjectOut])
-def list_project(request, page: int, pageSize: int, **params):
-    project = Project.objects.filter(**params).all()
+def list_project(request, page: int, pageSize: int):
+    project = Project.objects.all()
     return PaginatedResponse.paginated(queryset=project, page_size=pageSize, page=page)
