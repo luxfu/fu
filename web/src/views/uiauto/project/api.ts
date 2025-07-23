@@ -7,3 +7,11 @@ enum DeptApi  {
 export const getList = (params) => {
   return defHttp.get({ url: DeptApi.prefix, params });
 };
+
+export const createOrUpdate = (params, isUpdate) => {
+  if (isUpdate) {
+    return defHttp.put({ url: DeptApi.prefix + '/' + params.id, params });
+  } else {
+    return defHttp.post({ url: DeptApi.prefix, params });
+  }
+};

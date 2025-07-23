@@ -4,7 +4,6 @@ import { useI18n } from '/@/hooks/web/useI18n';
 import { h } from 'vue';
 import { Tag } from 'ant-design-vue';
 import { rules } from '/@/utils/helper/validator';
-import { getList } from './api';
 const { t } = useI18n();
 export const columns: BasicColumn[] = [
   {
@@ -26,7 +25,7 @@ export const columns: BasicColumn[] = [
   },
   {
     title: t('common.project.createTime'),
-    dataIndex: 'create',
+    dataIndex: 'create_time',
     width: 180,
   }
 ];
@@ -44,15 +43,15 @@ export const searchFormSchema: FormSchema[] = [
     component: 'Select',
     componentProps: {
       options: [
-        { label: t('common.enableText'), value: true },
-        { label: t('common.disableText'), value: false },
+        { label: t('common.enableText'), value: 1 },
+        { label: t('common.disableText'), value: 0 },
       ],
     },
     colProps: { span: 6 },
   },
 ];
 
-export const accountFormSchema: FormSchema[] = [
+export const projectFormSchema: FormSchema[] = [
   {
     field: 'id',
     label: 'id',
@@ -60,111 +59,21 @@ export const accountFormSchema: FormSchema[] = [
     show: false,
   },
   {
-    field: 'password',
-    label: 'password',
-    component: 'Input',
-    show: false,
-  },
-  {
-    field: 'username',
-    label: t('common.account.accountText'),
-    component: 'Input',
-    required: true,
-  },
-  {
     field: 'name',
-    label: t('common.account.userNameText'),
-    component: 'Input',
-    required: true,
-  },
-
-  {
-    field: 'mobile',
-    label: t('common.account.mobileText'),
-    component: 'Input',
-    rules: rules.rule('phone', false),
-  },
-  {
-    field: 'email',
-    label: t('common.account.emailText'),
-    component: 'Input',
-    rules: rules.rule('email', false),
-  },
-  {
-    label: t('common.account.userRoleText'),
-    field: 'role',
-    component: 'ApiSelect',
-    componentProps: {
-      api: getList,
-      labelField: 'name',
-      valueField: 'id',
-      mode: 'multiple',
-    },
-    itemProps: { validateTrigger: 'blur' },
-  },
-  {
-    label: t('common.account.userPostText'),
-    field: 'post',
-    component: 'ApiSelect',
-    componentProps: {
-      api: getList,
-      labelField: 'name',
-      valueField: 'id',
-      mode: 'multiple',
-    },
-    itemProps: { validateTrigger: 'blur' },
-  },
-  {
-    field: 'dept',
-    label: t('common.account.userDeptText'),
-    component: 'TreeSelect',
-    componentProps: {
-      fieldNames: {
-        label: 'name',
-        key: 'id',
-        value: 'id',
-      },
-      getPopupContainer: () => document.body,
-    },
-  },
-  {
-    field: 'home_path',
-    label: t('common.account.homePath'),
-    component: 'DictSelect',
-    componentProps: {
-      dictCode: 'home_path',
-    },
-  },
-  {
-    field: 'gender',
-    label: t('common.account.genderText'),
-    component: 'RadioButtonGroup',
-    defaultValue: 1,
-    componentProps: {
-      options: [
-        { label: t('common.account.maleText'), value: 1 },
-        { label: t('common.account.femaleText'), value: 0 },
-      ],
-    },
+    label: t('common.project.name'),
+    component: 'Input'
   },
   {
     field: 'status',
-    label: t('common.statusText'),
-    component: 'RadioButtonGroup',
-    defaultValue: true,
+    label: t('common.project.status'),
+    component: 'Select',
+    defaultValue: 1,
     componentProps: {
       options: [
-        { label: t('common.enableText'), value: true },
-        { label: t('common.disableText'), value: false },
+        { label: t('common.enableText'), value: 1 },
+        { label: t('common.disableText'), value: 0 },
       ],
     },
-    required: true,
-  },
-
-  {
-    field: 'avatar',
-    label: t('common.account.avatarText'),
-    component: 'Input',
-    slot: 'avatar',
+    colProps: { span: 6 },
   },
 ];

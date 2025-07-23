@@ -30,7 +30,6 @@
                 icon: 'clarity:note-edit-line',
                 color: 'primary',
                 auth: ['user:update'],
-                disabled: record.id === 1,
                 onClick: handleEdit.bind(null, record),
               },
               {
@@ -39,7 +38,6 @@
                 color: 'error',
                 placement: 'left',
                 auth: ['user:delete'],
-                disabled: record.id === 1,
                 popConfirm: {
                   title: t('common.delHintText'),
                   confirm: handleDelete.bind(null, record.id),
@@ -50,22 +48,26 @@
         </template>
       </template>
     </BasicTable>
+    <ProjectModal @register="registerDrawer" @success="handleSuccess" />
   </PageWrapper>
 </template>
 <script lang="ts">
   import { defineComponent, reactive } from 'vue';
   import { BasicTable, useTable, TableAction } from '/@/components/Table';
+  import { useDrawer } from '/@/components/Drawer';
   import { PageWrapper } from '/@/components/Page';
   import { getList } from './api';
   import { columns, searchFormSchema } from './data';
   import { useI18n } from '/@/hooks/web/useI18n';
-  import { Space, message } from 'ant-design-vue';
+  import { Space } from 'ant-design-vue';
+  import ProjectModal from './ProjectDrawer.vue';
   export default defineComponent({
     name: 'Project',
-    components: { BasicTable, TableAction, PageWrapper, Space },
+    components: { BasicTable, TableAction, PageWrapper, Space, ProjectModal },
     setup() {
       const { t } = useI18n();
-      const searchInfo = reactive({});
+      const searchInfo = reactive<Recordable>({});
+      const [registerDrawer, { openDrawer }] = useDrawer();
       const [registerTable, { reload, updateTableDataRecord, getSelectRows }] = useTable({
         api: getList,
         rowKey: 'id',
@@ -107,6 +109,7 @@
       function handleBulkDelete() {}
       function handleEdit(record: Recordable) {}
       function handleDelete(record: Recordable) {}
+      function handleSuccess() {}
       return {
         t,
         registerTable,
@@ -115,6 +118,8 @@
         handleBulkDelete,
         handleEdit,
         handleDelete,
+        registerDrawer,
+        handleSuccess,
       };
     },
   });
