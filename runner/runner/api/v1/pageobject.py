@@ -42,7 +42,7 @@ class PageObjectIn(Schema):
 @router.post("/pageobject", response=BaseResponse[PageObjectOut])
 def create_po(request, payload: PageObjectIn):
     po = PageObject.objects.create(**payload.dict())
-    return BaseResponse.success(data=po, message="创建成功")
+    return BaseResponse.succeed(data=po, message="创建成功")
 
 
 @router.get("/pageobject", response=PaginatedResponse[list[PageObjectOut]])

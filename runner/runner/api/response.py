@@ -7,23 +7,28 @@ T = TypeVar('T')
 
 
 class BaseResponse(BaseModel, Generic[T]):
-    code: int = Field(200, description="状态码")
+    code: int = Field(2000, description="状态码")
     message: str = Field("success", description="消息描述")
-    data: Optional[T] = Field(None, description="响应数据")
+    result: Optional[T] = Field(None, description="响应数据")
+    # fuadmin前端需要该字段，不然不处理result
+    success: str = Field("true", description="响应成功")
 
     @classmethod
-    def success(cls, data: T = None, message: str = "操作成功"):
-        return cls(code=200, message=message, data=data)
+    def succeed(cls, data: T = None, message: str = "操作成功"):
+        return cls(code=2000, message=message, result=data)
 
     @classmethod
     def error(cls, code: int, message: str, data: dict = None):
-        return cls(code=code, message=message, data=data)
+        return cls(code=code, message=message, result=data)
 
 
-class PaginatedResponse(BaseResponse, Generic[T]):
-    total: int = Field(..., description="总记录数")  # Field(...)特殊用法，表示必须且没有默认值
-    page: int = Field(1, description="当前页码")
-    page_size: int = Field(10, description="每页数量")
+class PaginationData(BaseModel, Generic[T]):
+    items: list[T] = Field(..., description="数据列表")
+    total: int = Field(..., description="总记录数")
+
+
+class PaginatedResponse(BaseResponse):
+    result: PaginationData = Field(..., description="分页数据")
 
     @classmethod
     def paginated(
@@ -36,10 +41,12 @@ class PaginatedResponse(BaseResponse, Generic[T]):
         total = queryset.count()
         items = queryset[(page-1)*page_size:page*page_size]
         return cls(
-            code=200,
+            code=2000,
             message=message,
-            data=items,
-            total=total,
+            result=PaginationData(
+                items=items,
+                total=total
+            ),
             page=page,
             page_size=page_size
         )

@@ -38,5 +38,9 @@ def addNum(x, y):
     return x + y
 
 
-# if __name__ == '__main__':
-#     print(addNum(2, 3))
+def test(a=1, b=2, **params):
+    print(**params)
+
+
+if __name__ == '__main__':
+    test(a=1, b=2, c=3)

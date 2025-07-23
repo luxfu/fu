@@ -3,7 +3,7 @@ from pydantic import field_validator
 from runner.models import Project
 from datetime import datetime
 from runner.api.response import BaseResponse, PaginatedResponse
-
+from typing import Optional
 router = Router(tags=["项目"])
 
 
@@ -35,10 +35,10 @@ class ProjectIn(Schema):
 @router.post("", response=BaseResponse[PorjectOut])
 def create_project(request, payload: ProjectIn):
     project = Project.objects.create(**payload.dict())
-    return project
+    return BaseResponse.succeed(data=project)
 
 
-@router.get("", response=PaginatedResponse[list[PorjectOut]])
-def list_project(request, page: int, pageSize: int):
-    project = Project.objects.all()
+@router.get("", response=PaginatedResponse[PorjectOut])
+def list_project(request, page: int, pageSize: int, **params):
+    project = Project.objects.filter(**params).all()
     return PaginatedResponse.paginated(queryset=project, page_size=pageSize, page=page)

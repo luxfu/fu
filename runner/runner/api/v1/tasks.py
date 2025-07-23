@@ -19,11 +19,11 @@ def create_task(request, payload: TasksIn):
     task_dict = payload.model_dump(exclude={"suite_id"})
     suite = TestSuite.objects.filter(id=payload.suite_id).first()
     task = Tasks.objects.create(test_suite=suite, **task_dict)
-    return BaseResponse.success(data=task)
+    return BaseResponse.succeed(data=task)
 
 
 @router.post("/task/run", response=BaseResponse[TasksOut])
 def run_task(request, task_id: int):
     run_test_suite(task_id)
     task = Tasks.objects.get(id=task_id)
-    return BaseResponse.success(data=task)
+    return BaseResponse.succeed(data=task)

@@ -38,4 +38,4 @@ def create_testsuite(request, payload: TestSuiteIn):
             ) for i, case in enumerate(test_cases)
         ]
         SuiteCaseRelation.objects.bulk_create(relations)
-    return BaseResponse.success(data=test_suite)
+    return BaseResponse.succeed(data=test_suite)
