@@ -39,13 +39,29 @@ class PageObjectIn(Schema):
         return self
 
 
-@router.post("/pageobject", response=BaseResponse[PageObjectOut])
+@router.post("", response=BaseResponse[PageObjectOut])
 def create_po(request, payload: PageObjectIn):
     po = PageObject.objects.create(**payload.dict())
     return BaseResponse.succeed(data=po, message="创建成功")
 
 
-@router.get("/pageobject", response=PaginatedResponse[list[PageObjectOut]])
-def list_pageobjects(request, page: int, page_size: int):
+@router.put("/{id}", response=BaseResponse[PageObjectOut])
+def edit_po(request, id: int, payload: PageObjectIn):
+    po = PageObject.objects.get(id=id)
+    dict_data = payload.dict()
+    for attr, value in dict_data.items():
+        setattr(po, attr, value)
+    po.save()
+    return BaseResponse.succeed(data=po)
+
+
+@router.delete("/{id}")
+def delete_po(request, id: int):
+    PageObject.objects.get(id=id).delete()
+    return BaseResponse.succeed()
+
+
+@router.get("", response=PaginatedResponse[PageObjectOut])
+def list_pageobjects(request, page: int, pageSize: int):
     po = PageObject.objects.all()
-    return PaginatedResponse.paginated(queryset=po, page_size=page_size, page=page)
+    return PaginatedResponse.paginated(queryset=po, page_size=pageSize, page=page)
