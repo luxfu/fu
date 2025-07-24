@@ -69,7 +69,7 @@ export default {
     confirmPasswordMsg: '两次输入的密码不一致!',
     changeAvatarText: '更换头像',
     resetPassword: '重置密码',
-    resetPasswordHit: '是否重置密码为123456'
+    resetPasswordHit: '是否重置密码为123456',
   },
   button: {
     nameText: '按钮名称',
@@ -221,9 +221,32 @@ export default {
     secondText: '秒',
     dayText: '天',
   },
-  project:{
-    name:'项目名称',
+  project: {
+    name: '项目名称',
     status: '项目状态',
-    createTime:'创建时间',
-  }
+    createTime: '创建时间',
+  },
+  pageobject: {
+    po_id: '页面ID',
+    name: '页面名称',
+    url: '页面地址',
+    locator: '定位信息',
+    locator_type: '定位方式',
+    create_time: '创建时间',
+    by_id: 'ID',
+    by_css: 'CSS',
+    by_xpath: 'XPATH',
+  },
+  case: {
+    url: '页面地址',
+    url_override: '地址覆盖',
+    po_id: '页面ID',
+    custom_locator: '定位信息',
+    custom_locator_type: '定位方式',
+    action_type: '操作类型',
+    action_value: '操作值',
+    assert_type: '断言类型',
+    assert_expression: '断言表达',
+    order: '执行顺序',
+  },
 };

@@ -14,13 +14,13 @@
   import { defineComponent, ref, computed, unref } from 'vue';
   import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
   import { BasicForm, useForm } from '/@/components/Form/index';
-  import { projectFormSchema } from './data';
+  import { caseFormSchema } from './data';
   import { createOrUpdate } from './api';
   import { CropperAvatar } from '/@/components/Cropper';
   import { uploadApi } from '/@/api/sys/upload';
   import { useI18n } from '/@/hooks/web/useI18n';
   export default defineComponent({
-    name: 'ProjectModal',
+    name: 'CaseModal',
     components: { BasicDrawer, BasicForm, CropperAvatar },
     emits: ['success', 'register'],
     setup(_, { emit }) {
@@ -30,7 +30,7 @@
 
       const [registerForm, { setFieldsValue, updateSchema, resetFields, validate }] = useForm({
         labelWidth: 100,
-        schemas: projectFormSchema,
+        schemas: caseFormSchema,
         showActionButtonGroup: false,
         baseColProps: { lg: 12, md: 24 },
       });

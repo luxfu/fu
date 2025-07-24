@@ -69,14 +69,13 @@ export default {
     confirmPasswordMsg: 'Password is not match',
     changeAvatarText: 'Change Avatar',
     resetPassword: 'Reset Password',
-    resetPasswordHit: 'Reset password to 123456'
+    resetPasswordHit: 'Reset password to 123456',
   },
   button: {
     nameText: 'Button Name',
     codeText: 'Button Code',
     methodText: 'Method Type',
     apiText: 'Button API',
-
   },
   column: {
     nameText: 'Column Name',
@@ -221,9 +220,32 @@ export default {
     secondText: 'Second',
     dayText: 'Day',
   },
-    project:{
-    name:'Project Name',
+  project: {
+    name: 'Project Name',
     status: 'Project Status',
-    createTime:'Create Time',
-  }
+    createTime: 'Create Time',
+  },
+  pageobject: {
+    po_id: 'Page ID',
+    name: 'Page Name',
+    url: 'Page Url',
+    locator: 'Locator',
+    locator_type: 'Locator By',
+    create_time: 'Create Time',
+    by_id: 'ID',
+    by_css: 'CSS',
+    by_xpath: 'XPATH',
+  },
+  case: {
+    url: 'Case Url',
+    url_override: 'Url Override',
+    po_id: 'Page ID',
+    custom_locator: 'Locator',
+    custom_locator_type: 'Locator By',
+    action_type: 'Action',
+    action_value: 'Action Value',
+    assert_type: 'Assert Type',
+    assert_expression: 'Assert Exp',
+    order: 'Order',
+  },
 };

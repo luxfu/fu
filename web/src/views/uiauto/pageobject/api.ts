@@ -1,7 +1,7 @@
 import { defHttp } from '/@/utils/http/axios';
 
 enum DeptApi {
-  prefix = '/runner/api/v1/project',
+  prefix = '/runner/api/v1/pageobject',
 }
 
 export const getList = (params) => {

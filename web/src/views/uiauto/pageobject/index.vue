@@ -48,7 +48,7 @@
         </template>
       </template>
     </BasicTable>
-    <ProjectModal @register="registerDrawer" @success="handleSuccess" />
+    <PoModal @register="registerDrawer" @success="handleSuccess" />
   </PageWrapper>
 </template>
 <script lang="ts">
@@ -60,10 +60,10 @@
   import { columns, searchFormSchema } from './data';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { Space, message } from 'ant-design-vue';
-  import ProjectModal from './ProjectDrawer.vue';
+  import PoModal from './PoDrawer.vue';
   export default defineComponent({
-    name: 'Project',
-    components: { BasicTable, TableAction, PageWrapper, Space, ProjectModal },
+    name: 'PageObject',
+    components: { BasicTable, TableAction, PageWrapper, Space, PoModal },
     setup() {
       const { t } = useI18n();
       const searchInfo = reactive<Recordable>({});
