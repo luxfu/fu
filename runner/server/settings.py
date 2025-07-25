@@ -92,10 +92,26 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+DATABASE_TYPE = "MYSQL"
+# 数据库地址
+DATABASE_HOST = "113.45.2.0"
+# 数据库端口
+DATABASE_PORT = 23123
+# 数据库用户名
+DATABASE_USER = "root"
+# 数据库密码
+DATABASE_PASSWORD = "123456"
+# 数据库名
+DATABASE_NAME = "runner"
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        "ENGINE": "django.db.backends.mysql",
+        "HOST": DATABASE_HOST,
+        "PORT": DATABASE_PORT,
+        "USER": DATABASE_USER,
+        "PASSWORD": DATABASE_PASSWORD,
+        "NAME": DATABASE_NAME,
     }
 }
 
