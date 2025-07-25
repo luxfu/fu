@@ -5,7 +5,7 @@
         <Space style="height: 40px">
           <a-button
             type="primary"
-            v-auth="['user:add']"
+            v-auth="['case:add']"
             preIcon="ant-design:plus-outlined"
             @click="handleCreate"
           >
@@ -13,7 +13,7 @@
           </a-button>
           <a-button
             type="error"
-            v-auth="['user:delete']"
+            v-auth="['case:delete']"
             preIcon="ant-design:delete-outlined"
             @click="handleBulkDelete"
           >
@@ -29,7 +29,7 @@
                 type: 'button',
                 icon: 'clarity:note-edit-line',
                 color: 'primary',
-                auth: ['user:update'],
+                auth: ['case:update'],
                 onClick: handleEdit.bind(null, record),
               },
               {
@@ -37,7 +37,7 @@
                 type: 'button',
                 color: 'error',
                 placement: 'left',
-                auth: ['user:delete'],
+                auth: ['case:delete'],
                 popConfirm: {
                   title: t('common.delHintText'),
                   confirm: handleDelete.bind(null, record.id),
