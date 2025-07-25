@@ -18,6 +18,6 @@ class AuthBearer(HttpBearer):
 router = Router()
 router.add_router("/project", project_router)
 router.add_router("/pageobject", po_router)
-router.add_router("/", suite_router)
+router.add_router("/suite", suite_router)
 router.add_router("/task", task_router)
 router.add_router("/case", case_router)
