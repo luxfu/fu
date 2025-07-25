@@ -13,7 +13,7 @@ class PageObject(models.Model):
         ('class', 'Class Name'),
         ('link', 'Link Text'),
     )
-    po_id = models.SmallIntegerField("po页面id")
+    po_id = models.SmallIntegerField("po页面id", primary_key=False)
     name = models.CharField("元素名称", max_length=100)
     locator = models.CharField("定位表达式", max_length=255)
     locator_type = models.CharField(
