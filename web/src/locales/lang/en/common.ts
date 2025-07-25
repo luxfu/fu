@@ -248,4 +248,12 @@ export default {
     assert_expression: 'Assert Exp',
     order: 'Order',
   },
+  tasks: {
+    task_name: 'Task Name',
+    task_suite: 'Test Suite',
+    status: 'Status',
+    start_time: 'Start Time',
+    end_time: 'End Time',
+    executor: 'Executor',
+  },
 };

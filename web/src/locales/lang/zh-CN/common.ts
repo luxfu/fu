@@ -249,4 +249,12 @@ export default {
     assert_expression: '断言表达',
     order: '执行顺序',
   },
+  tasks: {
+    task_name: '任务名称',
+    task_suite: '测试套件',
+    status: '任务状态',
+    start_time: '开始时间',
+    end_time: '结束时间',
+    executor: '执行人',
+  },
 };
